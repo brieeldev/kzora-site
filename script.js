@@ -1046,10 +1046,13 @@ async function initCard3D() {
     camera.aspect = L.w / L.h;
     if (boxed) {
       canvas.style.cssText = `left:${L.bx}px;top:${L.by}px;width:${L.bw}px;height:${L.bh}px;right:auto;bottom:auto`;
+      // bordas da caixa somem em degradê: brilho, luz do chão e partículas não têm corte reto
+      canvas.classList.add('is-boxed');
       renderer.setSize(L.bw, L.bh, false);
       camera.setViewOffset(L.w, L.h, L.bx, L.by, L.bw, L.bh);
     } else {
       canvas.style.cssText = '';
+      canvas.classList.remove('is-boxed');
       renderer.setSize(L.w, L.h, false);
       camera.clearViewOffset();
     }
@@ -2328,7 +2331,8 @@ function fitHeroStage() {
     if (window.innerWidth > 600) { stage.style.height = ''; return; }
     stage.style.height = '';
     const top = boxInHero(stage).y;
-    stage.style.height = `${Math.round(clamp(window.innerHeight - top - 64, 230, 440))}px`;
+    // sobra espaço embaixo para a dica "Arraste com o dedo" e o botão "Explorar site"
+    stage.style.height = `${Math.round(clamp(window.innerHeight - top - 104, 190, 440))}px`;
   };
   fit();
   window.addEventListener('resize', fit);
@@ -2466,9 +2470,35 @@ function renderCompanyInfo() {
 
 /* ---------- "Explorar site": some quando a página sai do topo ---------- */
 function initExploreButton() {
+  const btn = $('.intro-skip');
   const onScroll = () => heroEl.classList.toggle('is-scrolled', window.scrollY > 60);
   onScroll();
   window.addEventListener('scroll', onScroll, { passive: true });
+  // o botão fica fixo no rodapé da tela; se for encostar na dica do cartão ou na faixa
+  // NFC/QR/Google/Pix, sobe para ficar logo acima delas
+  const place = () => {
+    if (!btn) return;
+    btn.style.bottom = '';
+    const base = btn.getBoundingClientRect();
+    const h = base.height;
+    const maxTop = window.innerHeight - 8 - h;
+    const obstacles = $$('.stage-hint, .hero-strip')
+      .map((el) => el.getBoundingClientRect())
+      .filter((r) => r.width && r.left < base.right && base.left < r.right);
+    const hit = (t) => obstacles.find((r) => r.top < t + h + 10 && r.bottom > t - 10);
+    let top = base.top;
+    // tenta logo abaixo do obstáculo (se couber na tela); senão, logo acima dele
+    for (let i = 0; i < 6; i++) {
+      const r = hit(top);
+      if (!r) break;
+      const below = r.bottom + 12;
+      if (below <= maxTop && !hit(below)) { top = below; break; }
+      top = r.top - 12 - h;
+    }
+    if (top !== base.top) btn.style.bottom = `${Math.round(window.innerHeight - top - h)}px`;
+  };
+  intro.onFinish(() => requestAnimationFrame(place));
+  window.addEventListener('resize', () => { if (window.scrollY < 60) place(); });
 }
 
 /* ---------- Início ---------- */
