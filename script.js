@@ -56,6 +56,16 @@ const TESTIMONIALS = [];
 /* --------------------------------------------------------- */
 
 const doc = document.documentElement;
+
+// ao abrir ou atualizar, o site sempre começa do topo com a abertura completa:
+// o navegador não restaura a rolagem anterior nem pula para uma seção (#contato etc.)
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+// 'instant': o CSS usa rolagem suave, e uma volta animada passaria pela página rolada
+const toTop = () => window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+toTop();
+window.addEventListener('load', () => { if (window.scrollY > 0) toTop(); });
+window.addEventListener('pageshow', (e) => { if (e.persisted) toTop(); });
 // as animações rodam para todos, independentemente da opção "Efeitos de animação" do
 // sistema (prefers-reduced-motion), a pedido da KZORA
 const reduceMotion = false;
@@ -198,7 +208,6 @@ function initHeader() {
     e.preventDefault();
     const top = target.getBoundingClientRect().top + window.scrollY - (id === '#inicio' ? 0 : 64);
     smoothScrollTo(Math.max(0, Math.min(top, scrollState.max)));
-    history.replaceState(null, '', id);
   });
 
   // rolagem animada até a seção: duração proporcional à distância (0,7 a 1,6 s) e curva
@@ -2277,6 +2286,8 @@ function initShowcase() {
     return;
   }
   gsap.registerPlugin(ST);
+  // o ScrollTrigger também não devolve a página para a posição anterior ao atualizar
+  ST.clearScrollMemory('manual');
   const narrow = window.matchMedia('(max-width: 880px)').matches;
 
   const tl = gsap.timeline({
