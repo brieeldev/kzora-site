@@ -302,7 +302,6 @@ const intro = (() => {
   let poseDone = false;
   const poseFns = [];
   const finishFns = [];
-  const skipBtn = $('.intro-skip');
 
   const ctl = {
     get mode() { return mode; },
@@ -359,7 +358,6 @@ const intro = (() => {
     Object.assign(introPose, { z: -22, yaw: FINAL_YAW - TAU - 0.7, pitch: 0.38, roll: -0.22, lift: -0.55, light: 0, mix: BIG_INTRO ? 0 : 1 });
     const tl = gsap.timeline({
       paused: true,
-      onUpdate: () => skipBtn?.style.setProperty('--p', tl.progress().toFixed(3)),
       onComplete: () => ctl.finish(),
     });
     tl.to(introPose, { z: 0, lift: 0, duration: 1.3, ease: 'power3.out' }, 0)
@@ -371,7 +369,6 @@ const intro = (() => {
     if (BIG_INTRO) tl.to(introPose, { mix: 1, duration: INTRO.poseEnd - INTRO.shrinkAt, ease: 'power3.inOut' }, INTRO.shrinkAt);
     ctl.tl = tl;
 
-    skipBtn?.addEventListener('click', () => ctl.skip());
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') ctl.skip(); });
     window.addEventListener('scroll', () => { if (window.scrollY > 40) ctl.skip(); }, { passive: true });
     // com WebGL, a abertura começa quando o cartão 3D estiver pronto (shaders compilados);
@@ -2467,8 +2464,16 @@ function renderCompanyInfo() {
   el.hidden = false;
 }
 
+/* ---------- "Explorar site": some quando a página sai do topo ---------- */
+function initExploreButton() {
+  const onScroll = () => heroEl.classList.toggle('is-scrolled', window.scrollY > 60);
+  onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
+}
+
 /* ---------- Início ---------- */
 initCardShine();
+initExploreButton();
 renderCompanyInfo();
 initPhoneClock();
 initScrollFade();

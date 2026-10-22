@@ -1223,15 +1223,12 @@ h3 { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
   opacity: 0; visibility: hidden;
   transition: opacity .5s, visibility .5s, border-color .25s, color .25s, background-color .25s;
 }
-.intro-skip::after {
-  content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: 100%;
-  background: linear-gradient(90deg, #ff6600, #ffb36b);
-  transform-origin: 0 50%; transform: scaleX(var(--p));
-}
+.intro-skip .i { animation: skipArrow 1.8s ease-in-out infinite; }
+@keyframes skipArrow { 0%, 100% { translate: 0 -1px; } 50% { translate: 0 3px; } }
 .intro-skip .i { width: 14px; height: 14px; }
 .intro-skip:hover { border-color: var(--orange); color: #fff; background: rgba(255,102,0,.12); }
-.hero.intro-on .intro-skip { opacity: 1; visibility: visible; transition-delay: .4s; }
-.hero.intro-on.intro-short .intro-skip { opacity: 0; visibility: hidden; }
+/* só aparece quando a animação do cartão termina, e some ao rolar a página */
+.hero.intro-done:not(.is-scrolled) .intro-skip { opacity: 1; visibility: visible; transition-delay: .5s; }
 
 /* celular: hero compacto para cartão e botão caberem na primeira tela */
 @media (max-width: 600px) {
