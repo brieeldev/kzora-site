@@ -340,6 +340,8 @@ const intro = (() => {
       finished = true;
       heroEl.classList.remove('intro-on');
       heroEl.classList.add('intro-done');
+      // celular/tablet: o cabeçalho (logo e menu) desce do topo só agora
+      doc.classList.add('intro-finished');
       hideCallouts();
       finishFns.splice(0).forEach((fn) => fn());
     },

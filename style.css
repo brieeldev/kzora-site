@@ -1704,3 +1704,24 @@ html.lite body::after { display: none; }
 @media (max-width: 880px) {
   .hero-strip { margin-top: 92px; }
 }
+
+/* =========================================================
+   Celular/tablet: cabeçalho escondido durante a abertura do cartão;
+   quando ela termina (classe intro-finished), desce suavemente do topo.
+   Se o script não rodar, ele aparece sozinho depois de 10 s.
+   ========================================================= */
+@media (max-width: 1180px), (hover: none) and (pointer: coarse) {
+  .site-header {
+    transition: background-color .35s, backdrop-filter .35s, border-color .35s, height .35s var(--ease), box-shadow .35s,
+                transform .8s cubic-bezier(.22, 1, .36, 1), opacity .6s ease;
+  }
+  html.js:not(.intro-finished) .site-header {
+    transform: translateY(-110%);
+    opacity: 0;
+    pointer-events: none;
+    animation: headerFallback .8s cubic-bezier(.22, 1, .36, 1) 10s forwards;
+  }
+}
+@keyframes headerFallback {
+  to { transform: none; opacity: 1; pointer-events: auto; }
+}
