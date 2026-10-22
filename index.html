@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KZORA | Cartão NFC para Avaliações e Pix com um toque</title>
+  <meta name="description" content="Cartão inteligente KZORA com NFC e QR Code: seus clientes avaliam no Google, pagam via Pix e acessam suas redes com um toque ou escaneamento.">
+  <meta name="theme-color" content="#0a0a0b">
+  <link rel="canonical" href="https://kzoralabs.com.br/">
+  <meta name="robots" content="index, follow">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://kzoralabs.com.br/">
+  <meta property="og:site_name" content="KZORA">
+  <meta property="og:title" content="KZORA | Avaliações e Pix com um toque">
+  <meta property="og:description" content="Cartão inteligente com NFC e QR Code que conecta seus clientes às suas avaliações, pagamentos e redes sociais.">
+  <meta property="og:image" content="https://kzoralabs.com.br/assets/og-kzora.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="KZORA: Avaliações e Pix com um toque. Cartão inteligente com NFC e QR Code.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="KZORA | Avaliações e Pix com um toque">
+  <meta name="twitter:description" content="Cartão inteligente com NFC e QR Code que conecta seus clientes às suas avaliações, pagamentos e redes sociais.">
+  <meta name="twitter:image" content="https://kzoralabs.com.br/assets/og-kzora.jpg">
+  <meta property="og:locale" content="pt_BR">
+  <link rel="icon" type="image/png" href="assets/kzora-simbolo.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <!-- dados estruturados: organização (ajuda o Google a exibir nome, logo e contatos) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "KZORA",
+    "url": "https://kzoralabs.com.br/",
+    "logo": "https://kzoralabs.com.br/assets/kzora-simbolo.png",
+    "sameAs": ["https://www.instagram.com/kzoralabs/"],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+55-85-99739-1318",
+      "contactType": "customer service",
+      "areaServed": "BR",
+      "availableLanguage": "Portuguese"
+    }
+  }
+  </script>
+  <script>document.documentElement.classList.add('js');</script>
+
+  <!-- fontes locais e pré-carregadas: o texto é desenhado uma única vez (sem troca no meio da abertura) -->
+  <link rel="preload" href="assets/fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" as="image" href="assets/kzora-cartao-frente.jpg">
+  <link rel="preload" as="image" href="assets/lava-hero.webp" type="image/webp">
+  <!-- baixa o Three.js em paralelo ao HTML para a abertura começar sem espera -->
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js" crossorigin>
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js" crossorigin>
+  <link rel="stylesheet" href="style.css">
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+  <!-- ============ HEADER ============ -->
+  <header class="site-header" id="topo">
+    <div class="scroll-progress" aria-hidden="true"><span></span></div>
+    <div class="container header-inner">
+      <a class="brand" href="#inicio" aria-label="KZORA — voltar ao início">
+        <img src="assets/kzora-simbolo.png" alt="" width="40" height="40">
+        <span class="brand-word">KZORA</span>
+      </a>
+
+      <nav class="main-nav" id="menu" aria-label="Navegação principal">
+        <ul>
+          <li><a href="#inicio">Início</a></li>
+          <li><a href="#beneficios">Benefícios</a></li>
+          <li><a href="#como-funciona">Como funciona</a></li>
+          <li><a href="#equipe">Equipe</a></li>
+          <li><a href="#contato">Contato</a></li>
+        </ul>
+        <a class="btn btn-outline btn-sm nav-buy" href="#contato" data-buy>Comprar agora</a>
+      </nav>
+
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Abrir menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="conteudo">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="inicio" aria-labelledby="hero-title">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="glow glow-a"></div>
+        <div class="glow glow-b"></div>
+        <div class="lava lava-hero"></div>
+      </div>
+
+      <!-- Camada 3D do hero: o cartão nasce no centro e desliza até o espaço reservado (#cardStage) -->
+      <div class="hero-3d" aria-hidden="true">
+        <canvas id="cardCanvas"></canvas>
+      </div>
+
+      <!-- Abertura: chamadas sincronizadas com a rotação do cartão (posicionadas por script.js) -->
+      <div class="intro-layer" aria-hidden="true">
+        <svg class="intro-lines">
+          <polyline pathLength="1"/><polyline pathLength="1"/><polyline pathLength="1"/><polyline pathLength="1"/>
+          <circle r="3.5"/><circle r="3.5"/><circle r="3.5"/><circle r="3.5"/>
+        </svg>
+        <div class="callout">
+          <span class="callout-icon"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></span>
+          <span class="callout-text"><b>01</b><strong>Avaliações reais</strong><small>Direto para a sua página no Google</small></span>
+        </div>
+        <div class="callout">
+          <span class="callout-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg></span>
+          <span class="callout-text"><b>02</b><strong>QR Code integrado</strong><small>Leitura pela câmera de qualquer celular</small></span>
+        </div>
+        <div class="callout">
+          <span class="callout-icon"><svg viewBox="0 0 24 24"><path d="M8.5 8.5a5 5 0 0 1 0 7M12 6a8.5 8.5 0 0 1 0 12M15.5 3.5a12 12 0 0 1 0 17"/><circle cx="5" cy="12" r="1.4"/></svg></span>
+          <span class="callout-text"><b>03</b><strong>Tecnologia NFC</strong><small>Basta aproximar o celular</small></span>
+        </div>
+        <div class="callout">
+          <span class="callout-icon"><svg viewBox="0 0 24 24"><path d="M12 3 3 9l9 12 9-12z"/><path d="M3 9h18M9 9l3 12 3-12"/></svg></span>
+          <span class="callout-text"><b>04</b><strong>Design premium</strong><small>Preto texturizado, detalhes metálicos</small></span>
+        </div>
+      </div>
+
+      <button class="intro-skip" type="button">
+        Explorar site
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+      </button>
+
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow reveal">Tecnologia que conecta</p>
+          <h1 id="hero-title" class="reveal reveal-lines">
+            <span class="line"><span style="--i:0">Avaliações</span></span>
+            <span class="line"><span style="--i:1">e Pix</span></span>
+            <span class="line"><span style="--i:2">com um <span class="accent">toque.</span></span></span>
+          </h1>
+          <p class="lead reveal" data-delay="4">Um cartão inteligente que conecta seus clientes às suas avaliações, pagamentos e muito mais. Rápido, moderno e sem complicação.</p>
+          <div class="hero-ctas reveal" data-delay="5">
+            <a class="btn btn-primary magnetic" href="#contato" data-buy>
+              Quero o meu agora
+              <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <a class="btn btn-ghost" href="#como-funciona">Ver como funciona</a>
+          </div>
+        </div>
+
+        <div class="hero-visual reveal" data-delay="2">
+          <div class="card-stage" id="cardStage" role="group" aria-roledescription="visualizador 3D" aria-label="Cartão KZORA em 3D. Clique e arraste ou arraste com o dedo para girar 360°.">
+            <div class="stage-halo" aria-hidden="true"></div>
+            <!-- Fallback sem WebGL: fotografia do cartão real em perspectiva CSS -->
+            <figure class="card-fallback" id="cardFallback">
+              <div class="fb-card">
+                <img class="kz-card fb-front" draggable="false" src="assets/kzora-cartao-frente.jpg" alt="Cartão KZORA: Avalie nosso estabelecimento ou aproxime seu celular, com QR Code, NFC, estrelas e ícones sociais" width="768" height="1218">
+                <span class="fb-back" aria-hidden="true"></span>
+              </div>
+            </figure>
+            <div class="stage-floor" aria-hidden="true"></div>
+          </div>
+          <p class="stage-hint" aria-hidden="true">
+            <span class="hint-desktop">Clique e arraste para girar</span>
+            <span class="hint-touch">Arraste com o dedo para girar</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="container">
+        <ul class="hero-strip reveal" data-delay="6" aria-label="Recursos do cartão">
+          <li><strong>NFC</strong><span>aproximação</span></li>
+          <li><strong>QR Code</strong><span>para qualquer celular</span></li>
+          <li><strong>Google</strong><span>avaliações</span></li>
+          <li><strong>Pix</strong><span>pagamento direto</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ VITRINE DO CARTÃO (a rolagem controla o giro) ============ -->
+    <section class="showcase" id="cartao" aria-labelledby="showcase-title">
+      <span class="divider-run" aria-hidden="true"></span>
+      <div class="showcase-pin">
+        <div class="container showcase-grid">
+          <div class="showcase-copy">
+            <p class="eyebrow reveal">O cartão</p>
+            <h2 id="showcase-title" class="reveal" data-delay="1">Cada detalhe, <br><span class="accent">em suas mãos.</span></h2>
+            <p class="section-sub reveal" data-delay="2">Role a página para girar o cartão KZORA e conhecer cada recurso.</p>
+            <div class="showcase-progress reveal" data-delay="3" aria-hidden="true"><span></span></div>
+          </div>
+          <div class="showcase-stage">
+            <div class="showcase-glow" aria-hidden="true"></div>
+            <div class="sc-perspective">
+              <div class="fb-card sc-card">
+                <img class="kz-card fb-front" draggable="false" src="assets/kzora-cartao-frente.jpg" alt="Cartão KZORA: Avalie nosso estabelecimento ou aproxime seu celular, com QR Code, NFC, estrelas e ícones sociais" width="768" height="1218" loading="lazy">
+                <span class="fb-back" aria-hidden="true"></span>
+              </div>
+            </div>
+            <ul class="sc-labels" aria-label="Recursos do cartão">
+              <li class="sc-label" data-side="r" style="--y:56%">
+                <span class="callout-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg></span>
+                <span class="callout-text"><strong>QR Code integrado</strong><small>Leitura pela câmera de qualquer celular</small></span>
+              </li>
+              <li class="sc-label" data-side="r" style="--y:30%">
+                <span class="callout-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8.5 8.5a5 5 0 0 1 0 7M12 6a8.5 8.5 0 0 1 0 12M15.5 3.5a12 12 0 0 1 0 17"/><circle cx="5" cy="12" r="1.4"/></svg></span>
+                <span class="callout-text"><strong>Tecnologia NFC</strong><small>Basta aproximar o celular</small></span>
+              </li>
+              <li class="sc-label" data-side="l" style="--y:84%">
+                <span class="callout-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></span>
+                <span class="callout-text"><strong>Avaliações reais</strong><small>Direto para a sua página no Google</small></span>
+              </li>
+              <li class="sc-label" data-side="l" style="--y:10%">
+                <span class="callout-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 3 9l9 12 9-12z"/><path d="M3 9h18M9 9l3 12 3-12"/></svg></span>
+                <span class="callout-text"><strong>Design premium</strong><small>Preto texturizado, detalhes metálicos</small></span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BENEFÍCIOS ============ -->
+    <section class="section benefits" id="beneficios" aria-labelledby="benef-title">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow reveal">Benefícios</p>
+          <h2 id="benef-title" class="reveal" data-delay="1">Por que escolher a <span class="accent">KZORA?</span></h2>
+          <p class="section-sub reveal" data-delay="2">Tecnologia, praticidade e mais resultados para o seu negócio.</p>
+        </header>
+
+        <div class="benefit-grid">
+          <article class="benefit tilt reveal">
+            <span class="benefit-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M8.5 8.5a5 5 0 0 1 0 7M12 6a8.5 8.5 0 0 1 0 12M15.5 3.5a12 12 0 0 1 0 17"/><circle cx="5" cy="12" r="1.4"/></svg>
+            </span>
+            <div>
+              <h3>Tecnologia NFC</h3>
+              <p>Aproximação rápida e sem complicação. Basta encostar o celular no cartão.</p>
+            </div>
+          </article>
+
+          <article class="benefit tilt reveal" data-delay="1">
+            <span class="benefit-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>
+            </span>
+            <div>
+              <h3>QR Code personalizado</h3>
+              <p>Link direto para avaliações e pagamentos, compatível com a câmera de qualquer celular.</p>
+            </div>
+          </article>
+
+          <article class="benefit tilt reveal" data-delay="2">
+            <span class="benefit-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>
+            </span>
+            <div>
+              <h3>Mais avaliações</h3>
+              <p>Facilite o caminho até sua página no Google e fortaleça sua reputação.</p>
+            </div>
+          </article>
+
+          <article class="benefit tilt reveal" data-delay="3">
+            <span class="benefit-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 2.5 21.5 12 12 21.5 2.5 12z"/><path d="M8 12h8M12 8v8"/></svg>
+            </span>
+            <div>
+              <h3>Facilidade no Pix</h3>
+              <p>Direcione seus clientes para pagamentos de forma simples e segura.</p>
+            </div>
+          </article>
+
+          <article class="benefit benefit-wide tilt reveal" data-delay="2">
+            <span class="benefit-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3 3 9l9 12 9-12z"/><path d="M3 9h18M9 9l3 12 3-12M7.5 3.8 9 9l3-6 3 6 1.5-5.2"/></svg>
+            </span>
+            <div>
+              <h3>Design premium</h3>
+              <p>Cartão preto com acabamento texturizado, detalhes metálicos e destaques laranja.</p>
+            </div>
+            <div class="benefit-card" aria-hidden="true">
+              <img class="kz-card" src="assets/kzora-cartao-frente-sm.jpg" alt="" width="420" height="666" loading="lazy">
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DEMONSTRAÇÃO ============ -->
+    <section class="section demo" aria-labelledby="demo-title">
+      <div class="demo-bg" aria-hidden="true">
+        <div class="lava lava-demo" data-parallax="-0.08"></div>
+      </div>
+      <div class="container demo-grid">
+        <div class="demo-visual reveal" aria-hidden="true">
+          <div class="phone phone-demo" data-parallax="-0.06">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <!-- papel de parede KZORA (inspirado no cartão: preto, metal e laranja) -->
+              <div class="phone-wall">
+                <span class="wall-lines"></span>
+                <span class="wall-glow"></span>
+                <span class="wall-orbit"></span>
+                <span class="wall-mark">
+                  <img src="assets/kzora-simbolo.png" alt="" width="160" height="158" loading="lazy">
+                </span>
+                <span class="wall-word">KZORA</span>
+                <span class="wall-tag">Tecnologia que conecta</span>
+              </div>
+              <div class="screen-state screen-idle">
+                <span class="screen-clock" data-clock>9:41</span>
+                <span class="screen-date" data-date></span>
+                <span class="screen-wait">Aproxime o cartão</span>
+              </div>
+              <div class="screen-state screen-review">
+                <span class="g-word">Google</span>
+                <span class="screen-label">Avalie nossa página</span>
+                <span class="screen-stars">
+                  <i></i><i></i><i></i><i></i><i></i>
+                </span>
+                <span class="screen-btn">Enviar avaliação</span>
+              </div>
+            </div>
+          </div>
+          <div class="nfc-waves"><span></span><span></span><span></span></div>
+          <img class="kz-card demo-card" src="assets/kzora-cartao-frente-sm.jpg" alt="" width="420" height="666" loading="lazy">
+        </div>
+
+        <div class="demo-copy">
+          <h2 id="demo-title" class="reveal">Seu negócio<br>mais <span class="accent">conectado</span></h2>
+          <p class="reveal" data-delay="1">Com um simples toque ou escaneamento, seus clientes podem avaliar seu serviço ou realizar um pagamento via Pix, sem complicação.</p>
+          <ul class="check-list">
+            <li class="reveal" data-delay="1"><span class="ring" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 9a4 4 0 0 1 0 6M12 7a7 7 0 0 1 0 10M15 5a10 10 0 0 1 0 14"/></svg></span>NFC (aproximação)</li>
+            <li class="reveal" data-delay="2"><span class="ring" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2h-2zM20 20h-4"/></svg></span>QR Code personalizado</li>
+            <li class="reveal" data-delay="3"><span class="ring" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 4 2.3 4.8 5.2.7-3.8 3.7.9 5.2L12 16l-4.6 2.4.9-5.2-3.8-3.7 5.2-.7z"/></svg></span>Avaliações no Google</li>
+            <li class="reveal" data-delay="4"><span class="ring" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4 20 12 12 20 4 12z"/></svg></span>Pagamento via Pix</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="tagline reveal">
+          <h3>Rápido. Simples. Eficiente.</h3>
+          <p>Em poucos segundos, seu cliente já pode avaliar ou pagar.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ COMO FUNCIONA ============ -->
+    <section class="section how" id="como-funciona" aria-labelledby="how-title">
+      <div class="container how-grid">
+        <div class="how-copy">
+          <p class="eyebrow reveal">Como funciona</p>
+          <h2 id="how-title" class="reveal" data-delay="1">Simples, rápido<br>e <span class="accent">eficiente.</span></h2>
+          <p class="section-sub reveal" data-delay="2">Aproxime o cartão no celular do seu cliente ou escaneie o QR Code. Em segundos, ele acessa suas avaliações, realiza um Pix ou o que você configurar.</p>
+
+          <ol class="steps">
+            <li class="step reveal">
+              <span class="step-num">01</span>
+              <div>
+                <h3>Aproxime ou escaneie</h3>
+                <p>O cliente usa o celular e acessa instantaneamente.</p>
+              </div>
+            </li>
+            <li class="step reveal" data-delay="1">
+              <span class="step-num">02</span>
+              <div>
+                <h3>Escolha a ação</h3>
+                <p>Avaliação, pagamento via Pix, redes sociais ou outro link.</p>
+              </div>
+            </li>
+            <li class="step reveal" data-delay="2">
+              <span class="step-num">03</span>
+              <div>
+                <h3>Resultado imediato</h3>
+                <p>Mais avaliações, mais praticidade e mais conexão com seus clientes.</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+
+        <div class="how-visual reveal" data-delay="2" aria-hidden="true">
+          <img data-parallax="-0.1" class="kz-card how-card" src="assets/kzora-cartao-frente-sm.jpg" alt="" width="420" height="666" loading="lazy">
+          <div class="phone phone-how" data-parallax="0.05">
+            <div class="phone-notch"></div>
+            <div class="phone-screen screen-links">
+              <div class="links-head">
+                <img src="assets/kzora-simbolo.png" alt="" width="28" height="28">
+                <span>Seu estabelecimento</span>
+              </div>
+              <span class="link-btn"><b class="lk lk-g"><svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg></b>Avalie no Google</span>
+              <span class="link-btn"><b class="lk lk-pix"><svg viewBox="0 0 24 24"><path fill="#32BCAD" d="M5.283 18.36a3.505 3.505 0 0 0 2.493-1.032l3.6-3.6a.684.684 0 0 1 .946 0l3.613 3.613a3.504 3.504 0 0 0 2.493 1.032h.71l-4.56 4.56a3.647 3.647 0 0 1-5.156 0L4.85 18.36ZM18.428 5.627a3.505 3.505 0 0 0-2.493 1.032l-3.613 3.614a.67.67 0 0 1-.946 0l-3.6-3.6A3.505 3.505 0 0 0 5.283 5.64h-.434l4.573-4.572a3.646 3.646 0 0 1 5.156 0l4.559 4.559ZM1.068 9.422 3.79 6.699h1.492a2.483 2.483 0 0 1 1.744.722l3.6 3.6a1.73 1.73 0 0 0 2.443 0l3.614-3.613a2.482 2.482 0 0 1 1.744-.723h1.767l2.737 2.737a3.646 3.646 0 0 1 0 5.156l-2.736 2.736h-1.768a2.482 2.482 0 0 1-1.744-.722l-3.613-3.613a1.77 1.77 0 0 0-2.444 0l-3.6 3.6a2.483 2.483 0 0 1-1.744.722H3.791l-2.723-2.723a3.646 3.646 0 0 1 0-5.156"/></svg></b>Pagar com Pix</span>
+              <span class="link-btn"><b class="lk lk-ig"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="4.6"/><circle cx="12" cy="12" r="3.7"/><circle cx="16.9" cy="7.1" r="1" fill="#fff" stroke="none"/></svg></b>Nosso Instagram</span>
+              <span class="link-btn"><b class="lk lk-wa"><svg viewBox="0 0 24 24"><path fill="none" stroke="#fff" stroke-width="1.7" stroke-linejoin="round" d="M12 3.6a8.4 8.4 0 0 0-7.2 12.7L3.7 20.3l4.1-1.1A8.4 8.4 0 1 0 12 3.6z"/><path fill="#fff" d="M9.1 7.9c.2-.4.4-.4.6-.4h.5c.2 0 .4 0 .5.4l.8 1.8c.1.2.1.4 0 .6l-.5.7c-.1.1-.1.3 0 .5.6 1 1.4 1.8 2.4 2.4.2.1.4.1.5 0l.7-.6c.2-.1.4-.2.6-.1l1.8.9c.2.1.3.3.3.5v.4c0 .6-.4 1.1-1 1.3-.9.3-2.4.2-4.2-1.1-1.4-1-2.5-2.3-3.1-3.7-.5-1.3-.4-2.2-.1-2.8z"/></svg></b>Entre em contato</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ EQUIPE ============ -->
+    <section class="section team" id="equipe" aria-labelledby="team-title">
+      <div class="container">
+        <header class="section-head section-head-split">
+          <div>
+            <p class="eyebrow reveal">Nossa equipe</p>
+            <h2 id="team-title" class="reveal" data-delay="1">Conheça a equipe<br><span class="accent">KZORA</span></h2>
+          </div>
+          <p class="section-sub reveal" data-delay="2">Profissionais apaixonados por tecnologia e soluções que conectam pessoas e negócios.</p>
+        </header>
+        <!-- Preenchido por script.js a partir de TEAM (substitua os marcadores pelos dados reais) -->
+        <ul class="team-grid" id="teamGrid"></ul>
+      </div>
+    </section>
+
+    <!-- ============ RESULTADOS / SEGMENTOS ============ -->
+    <section class="section results" id="resultados" aria-labelledby="results-title">
+      <div class="results-bg" aria-hidden="true">
+        <div class="lava lava-results" data-parallax="-0.06"></div>
+      </div>
+      <div class="container">
+        <!-- Bloco de números: exibido apenas quando RESULTS em script.js tiver dados reais -->
+        <div class="results-block" id="resultsBlock" hidden>
+          <header class="section-head section-head-split">
+            <div>
+              <p class="eyebrow reveal">Resultados</p>
+              <h2 class="reveal" data-delay="1">Números que<br>falam por si só.</h2>
+            </div>
+          </header>
+          <ul class="stats" id="statsGrid"></ul>
+        </div>
+
+        <header class="section-head section-head-split" id="segmentsHead">
+          <div>
+            <p class="eyebrow reveal">Para quem é</p>
+            <h2 id="results-title" class="reveal" data-delay="1">Feito para negócios<br>que <span class="accent">atendem gente.</span></h2>
+          </div>
+          <p class="section-sub reveal" data-delay="2">Ideal para qualquer estabelecimento que quer ser avaliado, recebido e lembrado.</p>
+        </header>
+
+        <ul class="segments">
+          <li class="reveal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v8a2 2 0 0 0 2 2v8M5 3v5a2 2 0 0 0 2 2M9 3v5a2 2 0 0 1-2 2M17 21V3c-2 1-3 4-3 7h3"/></svg>Restaurantes</li>
+          <li class="reveal" data-delay="1"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><path d="M8 7.5 20 17M8 16.5 20 7"/></svg>Barbearias</li>
+          <li class="reveal" data-delay="2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg>Salões</li>
+          <li class="reveal" data-delay="3"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 13H6zM9 8V6a3 3 0 0 1 6 0v2"/></svg>Lojas</li>
+          <li class="reveal" data-delay="4"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/></svg>Clínicas</li>
+        </ul>
+
+        <!-- Depoimentos: exibidos apenas quando TESTIMONIALS em script.js tiver depoimentos reais -->
+        <div class="testimonials" id="testimonials" hidden></div>
+      </div>
+    </section>
+
+    <!-- ============ CONTATO ============ -->
+    <section class="section contact" id="contato" aria-labelledby="contact-title">
+      <div class="container contact-grid">
+        <div class="contact-form-wrap reveal">
+          <p class="eyebrow">Fale conosco</p>
+          <h2 id="contact-title">Vamos conversar?</h2>
+          <p class="section-sub">Tire suas dúvidas, faça um orçamento personalizado ou peça o seu cartão.</p>
+
+          <form class="contact-form" id="contactForm" novalidate>
+            <div class="field">
+              <label for="f-nome">Nome completo</label>
+              <input id="f-nome" name="nome" type="text" autocomplete="name" required placeholder="Seu nome">
+              <span class="field-error" aria-live="polite"></span>
+            </div>
+            <div class="field">
+              <label for="f-email">E-mail</label>
+              <input id="f-email" name="email" type="email" autocomplete="email" required placeholder="seu@email.com">
+              <span class="field-error" aria-live="polite"></span>
+            </div>
+            <div class="field">
+              <label for="f-tel">WhatsApp <small>(opcional)</small></label>
+              <input id="f-tel" name="telefone" type="tel" autocomplete="tel" inputmode="tel" placeholder="(00) 00000-0000">
+              <span class="field-error" aria-live="polite"></span>
+            </div>
+            <div class="field">
+              <label for="f-assunto">Assunto</label>
+              <select id="f-assunto" name="assunto">
+                <option value="compra">Quero comprar o cartão</option>
+                <option value="orcamento">Orçamento personalizado</option>
+                <option value="duvida">Dúvidas</option>
+              </select>
+            </div>
+            <div class="field field-full">
+              <label for="f-msg">Mensagem</label>
+              <textarea id="f-msg" name="mensagem" rows="4" required placeholder="Como podemos te ajudar?"></textarea>
+              <span class="field-error" aria-live="polite"></span>
+            </div>
+            <div class="field field-full field-consent">
+              <label class="consent">
+                <input id="f-consent" name="consentimento" type="checkbox" required>
+                <span>Li e concordo com a <a href="politica-de-privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a> e autorizo o uso dos meus dados para receber o retorno da KZORA.</span>
+              </label>
+              <span class="field-error" aria-live="polite"></span>
+            </div>
+            <button class="btn btn-primary btn-block field-full" type="submit">
+              Enviar mensagem
+              <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+            <p class="form-status field-full" id="formStatus" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+
+        <div class="contact-visual reveal" data-delay="2">
+          <figure>
+            <img data-parallax="-0.08" class="kz-card contact-card" src="assets/kzora-cartao-frente.jpg" alt="Cartão físico KZORA" width="768" height="1218" loading="lazy">
+            <figcaption>Imagem do produto. O QR Code e o NFC são configurados com o link do seu estabelecimento na entrega.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand reveal">
+        <a class="brand" href="#inicio" aria-label="KZORA — voltar ao início">
+          <img src="assets/kzora-simbolo.png" alt="" width="40" height="40" loading="lazy">
+          <span class="brand-word">KZORA</span>
+        </a>
+        <p>Soluções inteligentes para conectar seu negócio ao futuro.</p>
+      </div>
+
+      <nav class="reveal" data-delay="1" aria-label="Rodapé">
+        <h3 class="footer-title">Navegação</h3>
+        <ul>
+          <li><a href="#inicio">Início</a></li>
+          <li><a href="#beneficios">Benefícios</a></li>
+          <li><a href="#como-funciona">Como funciona</a></li>
+          <li><a href="#equipe">Equipe</a></li>
+          <li><a href="#contato">Contato</a></li>
+        </ul>
+      </nav>
+
+      <div class="reveal" data-delay="2">
+        <h3 class="footer-title">Redes sociais</h3>
+        <ul class="footer-social">
+          <li>
+            <a href="https://wa.me/5585997391318?text=Ol%C3%A1%21%20Vim%20pelo%20site%20da%20KZORA%20e%20quero%20saber%20mais%20sobre%20o%20cart%C3%A3o%20NFC." target="_blank" rel="noopener noreferrer" aria-label="WhatsApp da KZORA (abre conversa com mensagem pronta)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6a8.4 8.4 0 0 0-7.2 12.7L3.7 20.3l4.1-1.1A8.4 8.4 0 1 0 12 3.6z"/><path class="wa-phone" d="M9.1 7.9c.2-.4.4-.4.6-.4h.5c.2 0 .4 0 .5.4l.8 1.8c.1.2.1.4 0 .6l-.5.7c-.1.1-.1.3 0 .5.6 1 1.4 1.8 2.4 2.4.2.1.4.1.5 0l.7-.6c.2-.1.4-.2.6-.1l1.8.9c.2.1.3.3.3.5v.4c0 .6-.4 1.1-1 1.3-.9.3-2.4.2-4.2-1.1-1.4-1-2.5-2.3-3.1-3.7-.5-1.3-.4-2.2-.1-2.8z"/></svg>
+              WhatsApp
+            </a>
+          </li>
+          <li>
+            <a href="https://ig.me/m/kzoralabs?text=Ol%C3%A1%21%20Vim%20pelo%20site%20da%20KZORA%20e%20quero%20saber%20mais%20sobre%20o%20cart%C3%A3o%20NFC." target="_blank" rel="noopener noreferrer" aria-label="Instagram da KZORA (abre mensagem direta)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8"/></svg>
+              Instagram
+            </a>
+          </li>
+          <li>
+            <a href="https://kzoralabs.com.br" target="_blank" rel="noopener noreferrer" aria-label="Site oficial da KZORA, kzoralabs.com.br">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg>
+              Site oficial
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom reveal" data-delay="3">
+      <p>© <span id="year">2026</span> KZORA. Todos os direitos reservados.</p>
+      <p class="footer-legal">
+        <a href="politica-de-privacidade.html">Política de Privacidade</a>
+      </p>
+      <p class="company-info" id="companyInfo" hidden></p>
+      <p class="footer-note">Google, Instagram, WhatsApp e Pix são marcas de seus respectivos titulares, citadas apenas para indicar os serviços a que o cartão dá acesso.</p>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <!-- GSAP + ScrollTrigger: abertura do hero e vitrine controlada pela rolagem -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+  <script type="module" src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+# =========================================================
+# KZORA — segurança e desempenho do servidor (Apache / LiteSpeed)
+# Funciona nas hospedagens com Apache ou LiteSpeed (Hostinger, HostGator, Locaweb etc.).
+# Em Nginx, Vercel ou Netlify as mesmas regras precisam ser escritas no formato de cada uma.
+# =========================================================
+
+# ---------- 1. HTTPS obrigatório ----------
+# Redireciona http:// para https://. Não se aplica ao localhost (WAMP), para o site
+# continuar abrindo no computador durante o desenvolvimento.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)(:[0-9]+)?$ [NC]
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+<IfModule mod_headers.c>
+  # ---------- 2. Cabeçalhos de segurança ----------
+
+  # HSTS: o navegador passa a usar sempre HTTPS neste domínio por 1 ano (só enviado em HTTPS)
+  Header always set Strict-Transport-Security "max-age=31536000" "expr=%{HTTPS} == 'on'"
+
+  # impede que o navegador "adivinhe" o tipo de arquivo (bloqueia certos ataques de upload)
+  Header always set X-Content-Type-Options "nosniff"
+
+  # impede que outros sites coloquem esta página dentro de um iframe (clickjacking)
+  Header always set X-Frame-Options "SAMEORIGIN"
+
+  # ao clicar em links externos, envia só o domínio de origem, sem o caminho completo
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # o site não usa câmera, microfone, localização, pagamento nem sensores
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+
+  # isola a janela do site de janelas abertas por outros sites
+  Header always set Cross-Origin-Opener-Policy "same-origin-allow-popups"
+
+  # ---------- 3. Política de segurança de conteúdo (CSP) ----------
+  # Lista de onde o site pode carregar scripts, estilos, imagens e fontes. Qualquer script
+  # injetado por terceiros (ex.: extensão maliciosa, ataque XSS) é bloqueado.
+  #  - scripts: o próprio site + jsDelivr (Three.js) + cdnjs (GSAP)
+  #  - os 'sha256-...' autorizam os 3 scripts escritos dentro do HTML:
+  #      index.html: classe "js" e o importmap do Three.js
+  #      politica-de-privacidade.html: ano do rodapé
+  #    ATENÇÃO: se algum desses scripts internos for alterado, o hash precisa ser recalculado,
+  #    senão o navegador bloqueia o script.
+  #  - connect-src: se configurar CONFIG.contactEndpoint (ex.: Formspree), adicione o domínio
+  #    dele aqui, ex.: connect-src 'self' https://formspree.io
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'sha256-/x7W7R75k8Roq0WaVRQX9blP4OufE5xbAdzklGxsgpw=' 'sha256-KdwMH+AzGDNDosnmI+yteLvITvJmpIAsmYJ9JNR+oPw=' 'sha256-rnSilqx70ysJSINaYijSOVvGOzG2uzSgg0sneaLAnns='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
+
+  # ---------- 4. Cache (desempenho) ----------
+  # imagens e fontes: 30 dias no navegador do visitante
+  <FilesMatch "\.(jpg|jpeg|png|webp|svg|woff2|ico)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+  # HTML, CSS e JS: o navegador confere se há versão nova a cada visita
+  <FilesMatch "\.(html|css|js)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+
+# ---------- 5. Compressão (páginas carregam mais rápido) ----------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript text/javascript application/json image/svg+xml text/plain text/xml application/xml
+</IfModule>
+
+# ---------- 6. Proteções extras ----------
+# não lista o conteúdo das pastas
+Options -Indexes
+# bloqueia acesso a arquivos ocultos (ex.: .htaccess, .git, .env)
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+# tipo correto para as fontes
+AddType font/woff2 .woff2
+AddType image/webp .webp
