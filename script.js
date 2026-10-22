@@ -2297,7 +2297,9 @@ function initShowcase() {
   tl.fromTo(card,
     { '--fz': '-420px', '--fly': '70px', '--fry': '-38deg', '--tx': '20deg', '--frz': '-6deg' },
     { '--fz': '0px', '--fly': '0px', '--fry': '0deg', '--tx': '4deg', '--frz': '0deg', duration: 1, ease: 'power2.out' }, 0)
-    .fromTo(glow, { opacity: 0.25, scale: 0.7 }, { opacity: 1, scale: 1.1, duration: 1 }, 0)
+    .fromTo(glow, { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1.1, duration: 1 }, 0)
+    // o cartão só aparece quando a animação começa (antes disso a seção mostra só o texto)
+    .fromTo('.sc-perspective', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4, ease: 'power1.out' }, 0)
     // 2. giro progressivo: lateral, verso neutro, de volta à frente
     .to(card, { '--fry': '180deg', '--tx': '-6deg', duration: 1.1, ease: 'power1.inOut' }, 1)
     .to(card, { '--fry': '360deg', '--tx': '4deg', duration: 1.1, ease: 'power1.inOut' }, 2.1)
