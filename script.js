@@ -76,9 +76,6 @@ function enterLite() {
   if (LITE) return;
   LITE = true;
   doc.classList.add('lite', 'low-power');
-  // imagem menor no cartão CSS: transformar 3D na CPU custa proporcional aos pixels
-  const front = document.querySelector('.card-fallback .fb-front');
-  if (front) front.src = 'assets/kzora-cartao-frente-sm.jpg';
   liteFns.forEach((fn) => fn());
 }
 
@@ -284,9 +281,18 @@ const heroEl = $('.hero');
      1,9–3,25 s chamadas aparecem uma a uma; somem juntas em 3,9 s
    ========================================================= */
 const FINAL_YAW = -0.18;
-const introPose = { z: 0, yaw: FINAL_YAW, pitch: 0.05, roll: 0.05, lift: 0, light: 1 };
+// mix: 0 = cartão grande no centro da tela, 1 = cartão no lugar dele no hero
+const introPose = { z: 0, yaw: FINAL_YAW, pitch: 0.05, roll: 0.05, lift: 0, light: 1, mix: 1 };
+// celular e tablet: a abertura começa só com o cartão grande no centro; depois ele diminui,
+// vai para o lugar dele e só então aparecem as informações
+const BIG_INTRO = window.matchMedia('(max-width: 1180px)').matches
+  || window.matchMedia('(hover: none) and (pointer: coarse)').matches;
 // seq: chamadas uma por vez (sem espaço nas laterais), cada uma visível por seqHold segundos
 const INTRO = { reveal: 1.0, poseEnd: 2.3, callouts: [1.9, 2.35, 2.8, 3.25], fadeAt: 4.9, end: 5.4, seq: false, seqHold: 0.55 };
+if (BIG_INTRO) {
+  // 0–2,3 s cartão grande girando; 2,3–3,1 s diminui até o lugar; 3,25 s em diante, informações
+  Object.assign(INTRO, { reveal: 2.5, poseEnd: 3.1, callouts: [3.25, 3.6, 3.95, 4.3], fadeAt: 5.8, end: 6.3, shrinkAt: 2.3 });
+}
 
 const intro = (() => {
   const gsap = window.gsap;
@@ -316,7 +322,7 @@ const intro = (() => {
     setPoseDone() {
       if (poseDone) return;
       poseDone = true;
-      Object.assign(introPose, { z: 0, yaw: FINAL_YAW, pitch: 0.05, roll: 0.05, lift: 0, light: 1 });
+      Object.assign(introPose, { z: 0, yaw: FINAL_YAW, pitch: 0.05, roll: 0.05, lift: 0, light: 1, mix: 1 });
       poseFns.splice(0).forEach((fn) => fn());
     },
     finish() {
@@ -350,7 +356,7 @@ const intro = (() => {
   if (mode === 'full') {
     heroEl.classList.add('intro-on');
     $('.hero-visual')?.classList.add('is-visible');
-    Object.assign(introPose, { z: -22, yaw: FINAL_YAW - TAU - 0.7, pitch: 0.38, roll: -0.22, lift: -0.55, light: 0 });
+    Object.assign(introPose, { z: -22, yaw: FINAL_YAW - TAU - 0.7, pitch: 0.38, roll: -0.22, lift: -0.55, light: 0, mix: BIG_INTRO ? 0 : 1 });
     const tl = gsap.timeline({
       paused: true,
       onUpdate: () => skipBtn?.style.setProperty('--p', tl.progress().toFixed(3)),
@@ -362,6 +368,7 @@ const intro = (() => {
       .to(introPose, { pitch: 0.05, roll: 0.05, duration: 1.7, ease: 'power2.out' }, 0.45)
       .call(() => ctl.revealHero(), null, INTRO.reveal)
       .call(() => ctl.setPoseDone(), null, INTRO.poseEnd);
+    if (BIG_INTRO) tl.to(introPose, { mix: 1, duration: INTRO.poseEnd - INTRO.shrinkAt, ease: 'power3.inOut' }, INTRO.shrinkAt);
     ctl.tl = tl;
 
     skipBtn?.addEventListener('click', () => ctl.skip());
@@ -463,7 +470,7 @@ function calloutView() {
     bottomSeq: Math.min(heroEl.clientHeight, window.innerHeight) - 84,
     // limite esquerdo para uma chamada ocupando [y, y + h] (margem vertical de 18 px)
     minXAt(y, h) {
-      if (narrow) return 12;
+      if (narrow) return 6;
       let right = 0;
       rects.forEach(([t, b, r]) => { if (t < y + h + 18 && b > y - 18) right = Math.max(right, r); });
       return right ? right + 16 : 16;
@@ -487,8 +494,12 @@ let calloutSlots = null;  // posições fixas das chamadas (recalculadas só qua
    Retorna seq = true quando alguma não cabe nas laterais: aí elas aparecem uma por vez sobre o
    cartão (celular e tablets em que o cartão ocupa a largura). */
 function computeCalloutSlots(anchors, box, view) {
-  if (view.narrow) return { seq: true, slots: [] };
   if (!callouts[0].w) measureCallouts();
+  // etiquetas compactas (celular/tablet sem espaço): bem junto do cartão
+  const compact = view.narrow || heroEl.classList.contains('callouts-compact');
+  const gap = compact ? 12 : CALLOUT_GAP;
+  const minGap = compact ? 6 : 16;
+  const edgeMargin = compact ? 6 : 12;
   const cardLeft = box.cx - box.hw;
   const cardRight = box.cx + box.hw;
   const items = callouts.map((c, i) => ({
@@ -499,8 +510,8 @@ function computeCalloutSlots(anchors, box, view) {
     const { c } = it;
     if (y < view.top || y + c.h > view.bottom) return false;
     if (placed.some((q) => q.dir === side && y < q.ly + q.c.h + CALLOUT_SPACE && q.ly < y + c.h + CALLOUT_SPACE)) return false;
-    if (side < 0) return cardLeft - 16 - c.w >= view.minXAt(y, c.h);
-    return cardRight + 16 + c.w <= view.w - 12;
+    if (side < 0) return cardLeft - minGap - c.w >= view.minXAt(y, c.h);
+    return cardRight + minGap + c.w <= view.w - edgeMargin;
   };
   const slots = [];
   let seq = false;
@@ -522,8 +533,8 @@ function computeCalloutSlots(anchors, box, view) {
       dir: side,
       ly: found,
       lx: side < 0
-        ? Math.max(cardLeft - CALLOUT_GAP - it.c.w, view.minXAt(found, it.c.h))
-        : Math.min(cardRight + CALLOUT_GAP, view.w - it.c.w - 12),
+        ? Math.max(cardLeft - gap - it.c.w, view.minXAt(found, it.c.h))
+        : Math.min(cardRight + gap, view.w - it.c.w - edgeMargin),
       // trocou de lado: o ponto de uma borda do cartão é espelhado para a outra
       mirror: (side > 0 && it.ax < cardLeft + box.hw * 0.4) || (side < 0 && it.ax > cardRight - box.hw * 0.4),
     };
@@ -573,9 +584,10 @@ function drawCallouts(el, anchors, box, view, edges) {
       else if (slot.mirror) ax = box.cx - (ax - box.cx);
       x = slot.lx;
       y = slot.ly;
-      const edge = dir < 0 ? x + c.w + 8 : x - 8;
+      const pad = view.narrow ? 3 : 8;
+      const edge = dir < 0 ? x + c.w + pad : x - pad;
       const my = y + c.h / 2;
-      const elbow = edge - dir * 22;
+      const elbow = edge - dir * (view.narrow ? 4 : 22);
       pts = `${ax.toFixed(1)},${ay.toFixed(1)} ${elbow.toFixed(1)},${my.toFixed(1)} ${edge.toFixed(1)},${my.toFixed(1)}`;
       x += dir * (1 - v) * 18;
     } else {
@@ -607,8 +619,11 @@ function drawCallouts(el, anchors, box, view, edges) {
 function planCallouts() {
   const view = calloutView();
   const stage = $('#cardStage');
-  let seq = view.narrow;
-  if (!seq && stage) {
+  // celular: etiquetas compactas; mede de novo depois de trocar o estilo
+  heroEl.classList.toggle('callouts-compact', view.narrow);
+  measureCallouts();
+  let seq = false;
+  if (stage) {
     const s = boxInHero(stage);
     const hh = Math.min(s.h / 1.34, (s.w / 1.9) * (1218 / 768)) / 2;
     const hw = hh * (768 / 1218);
@@ -616,12 +631,25 @@ function planCallouts() {
     const ANCH = [[0.505, 0.89], [0.49, 0.52], [0.885, 0.385], [0.0, 0.42]];
     const anchors = ANCH.map(([u, v]) => [box.cx - hw + u * 2 * hw, box.cy - hh + v * 2 * hh]);
     seq = computeCalloutSlots(anchors, box, view).seq;
+    // não couberam do tamanho normal: tenta as etiquetas compactas antes de mostrar uma por vez
+    if (seq && !view.narrow) {
+      heroEl.classList.add('callouts-compact');
+      measureCallouts();
+      seq = computeCalloutSlots(anchors, box, view).seq;
+      if (seq) { heroEl.classList.remove('callouts-compact'); measureCallouts(); }
+    }
   }
   if (seq) {
     INTRO.seq = true;
-    INTRO.callouts = [1.9, 2.65, 3.4, 4.15];
-    INTRO.fadeAt = 5.7;
-    INTRO.end = 6.0;
+    if (BIG_INTRO) {
+      INTRO.callouts = [3.25, 4.0, 4.75, 5.5];
+      INTRO.fadeAt = 7.1;
+      INTRO.end = 7.35;
+    } else {
+      INTRO.callouts = [1.9, 2.65, 3.4, 4.15];
+      INTRO.fadeAt = 5.7;
+      INTRO.end = 6.0;
+    }
   }
 }
 
@@ -667,7 +695,9 @@ async function initCard3D() {
     intro.start();
     return;
   }
-  const BASE_PR = Math.min(window.devicePixelRatio || 1, LOW_POWER ? 1 : 1.25);
+  // celular/tablet: telas de alta densidade precisam de até 2x para o cartão ficar nítido
+  const BASE_PR = Math.min(window.devicePixelRatio || 1, BIG_INTRO ? 2 : 1.25);
+  const PR_MIN = BIG_INTRO ? Math.min(BASE_PR, 1.25) : 0.5;
   let pixelRatio = BASE_PR;
   renderer.setPixelRatio(pixelRatio);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -1013,7 +1043,8 @@ async function initCard3D() {
   // fora da abertura o canvas encolhe para uma caixa ao redor do cartão; setViewOffset
   // mantém a mesma projeção do hero inteiro, então a imagem não muda, só o custo cai
   // o canvas fica sempre na caixa ao redor do cartão; setViewOffset mantém a projeção do hero
-  const boxed = true;
+  // na abertura grande (celular/tablet) o canvas cobre o hero; depois volta para a caixa
+  let boxed = !(BIG_INTRO && intro.mode === 'full' && !intro.poseDone);
   function applyViewport() {
     camera.aspect = L.w / L.h;
     if (boxed) {
@@ -1054,7 +1085,8 @@ async function initCard3D() {
     const headerH = $('.site-header').offsetHeight || 70;
     L.cx = L.w / 2;
     L.cy = (headerH + vh) / 2;
-    L.cs = (vh * (L.narrow ? 0.42 : 0.58)) / (H * L.ppw);
+    // tamanho do cartão grande no centro (abertura no celular/tablet)
+    L.cs = Math.min((vh - headerH) * 0.7 / (H * L.ppw), L.w * 0.78 / (W * L.ppw));
     measureCallouts();
     applyViewport();
   }
@@ -1092,7 +1124,15 @@ async function initCard3D() {
     const base = tween.on ? tween.to : Math.round(drag.ry / TAU) * TAU;
     spinTo(base + dir * TAU, smoother, 1.2);
   };
-  intro.onPoseDone(() => { done = true; autoW = 0; autoT = 0; });
+  intro.onPoseDone(() => {
+    done = true;
+    autoW = 0;
+    autoT = 0;
+    if (!boxed) {
+      boxed = true;
+      applyViewport();
+    }
+  });
 
   // segurar e arrastar (botão do mouse ou dedo): giro livre de 360° com inércia;
   // ao soltar, completa a volta na direção do gesto ou volta à frente mais próxima
@@ -1160,6 +1200,7 @@ async function initCard3D() {
   // projeta um ponto do mundo para px do hero (considerando a caixa do setViewOffset)
   const toHero = (vec) => {
     vec.project(camera);
+    if (!boxed) return [(vec.x + 1) / 2 * L.w, (1 - vec.y) / 2 * L.h];
     return [L.bx + (vec.x + 1) / 2 * L.bw, L.by + (1 - vec.y) / 2 * L.bh];
   };
   const cardBox3D = () => {
@@ -1180,7 +1221,7 @@ async function initCard3D() {
     const now = nowS();
     const el = intro.time();
     // pose: escrita pela linha do tempo GSAP da abertura; depois fica na pose final
-    const { z, yaw: yaw0, pitch: pitch0, roll: roll0, lift, light } = introPose;
+    const { z, yaw: yaw0, pitch: pitch0, roll: roll0, lift, light, mix } = introPose;
 
     // interação (apenas depois da abertura)
     let yaw = yaw0;
@@ -1216,8 +1257,11 @@ async function initCard3D() {
     if (!reduceMotion) bob = Math.sin(t * 1.1) * 0.08 * clamp(light);
 
     // posição: sempre no espaço do #cardStage; a profundidade (z) faz o cartão vir de longe
-    const sc = L.fs;
-    pivot.position.set(toWX(L.fx), toWY(L.fy) + (bob + lift) * sc, z);
+    // do centro da tela (mix 0, abertura no celular/tablet) até o lugar no hero (mix 1)
+    const sc = L.cs + (L.fs - L.cs) * mix;
+    const px = L.cx + (L.fx - L.cx) * mix;
+    const py = L.cy + (L.fy - L.cy) * mix;
+    pivot.position.set(toWX(px), toWY(py) + (bob + lift) * sc, z);
     pivot.rotation.set(pitch, yaw, roll0);
     fxUniforms.uAngle.value = yaw;
     fxUniforms.uTime.value = t;
@@ -1308,8 +1352,8 @@ async function initCard3D() {
         const med = [...perf].sort((a, b) => a - b)[perf.length >> 1];
         // a troca de resolução fica para o início do próximo quadro: setSize limpa o
         // buffer já desenhado e mostraria um quadro vazio (piscada)
-        if (med > 1 / 30 && pixelRatio > 0.5) {
-          pixelRatio = Math.max(0.5, pixelRatio - 0.25);
+        if (med > 1 / 30 && pixelRatio > PR_MIN) {
+          pixelRatio = Math.max(PR_MIN, pixelRatio - 0.25);
           needsResize = true;
         } else if (med < 1 / 50 && pixelRatio < BASE_PR) {
           pixelRatio = Math.min(BASE_PR, pixelRatio + 0.25);
@@ -2113,6 +2157,17 @@ function initFallbackCard() {
         cardEl.style.setProperty('--tx', `${deg(p.pitch - 0.05).toFixed(2)}deg`);
         cardEl.style.setProperty('--frz', `${deg(p.roll - 0.05).toFixed(2)}deg`);
         cardEl.style.setProperty('--fz', `${(p.z * 34).toFixed(1)}px`);
+        if (BIG_INTRO) {
+          // grande no centro da tela no começo, depois vai para o lugar dele
+          const b = cachedBox(cardEl);
+          const view = calloutView();
+          const vh = Math.min(view.h, window.innerHeight);
+          const big = Math.min((vh - view.top) * 0.7 / b.h, view.w * 0.78 / b.w);
+          const k = 1 - p.mix;
+          cardEl.style.setProperty('--fbx', `${((view.w / 2 - (b.x + b.w / 2)) * k).toFixed(1)}px`);
+          cardEl.style.setProperty('--fby', `${(((view.top + vh) / 2 - (b.y + b.h / 2)) * k).toFixed(1)}px`);
+          cardEl.style.setProperty('--fsc', (big + (1 - big) * p.mix).toFixed(4));
+        }
         cardEl.style.setProperty('--fly', `${(-p.lift * 110).toFixed(1)}px`);
         cardEl.style.setProperty('--flight', p.light.toFixed(3));
       }
@@ -2127,7 +2182,7 @@ function initFallbackCard() {
     };
     window.gsap.ticker.add(apply);
     intro.onPoseDone(() => {
-      ['--tx', '--frz', '--fz', '--fly', '--flight'].forEach((v) => cardEl.style.removeProperty(v));
+      ['--tx', '--frz', '--fz', '--fly', '--flight', '--fbx', '--fby', '--fsc'].forEach((v) => cardEl.style.removeProperty(v));
       setRy(0);
       void cardEl.offsetWidth;
       cardEl.classList.remove('is-dragging');

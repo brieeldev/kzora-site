@@ -312,6 +312,7 @@ h3 { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
   aspect-ratio: 768 / 1218;
   transform-style: preserve-3d;
   transform:
+    translate(var(--fbx, 0px), var(--fby, 0px)) scale(var(--fsc, 1))
     translate3d(0, var(--fly, 0px), var(--fz, 0px))
     rotateX(calc(6deg + var(--tx, 0deg)))
     rotateY(calc(-16deg + var(--fry, 0deg) + var(--ty, 0deg)))
@@ -811,7 +812,7 @@ h3 { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
 .contact-form button[disabled] { opacity: .6; pointer-events: none; }
 
 .contact-visual { display: grid; place-items: center; perspective: 1400px; }
-.contact-visual figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 26px; }
+.contact-visual figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 40px; }
 .contact-card {
   width: min(300px, 70vw);
   transform: translate3d(0, var(--py, 0px), 0) rotateY(-20deg) rotateX(8deg) rotateZ(6deg);
@@ -1467,15 +1468,9 @@ h3 { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
    repinturas, mesmas animações principais
    ========================================================= */
 html.lite body::after { display: none; }
-.lite .fb-shine, .lite .hero-strip::after, .lite .benefit-wide::after, .lite .phone-screen::after { display: none; }
 .lite .fb-edge:nth-child(even) { display: none; }
-.lite .glow-a, .lite .eyebrow::before, .lite .eyebrow::after, .lite .btn-primary::after { animation: none; }
-.lite .stage-halo { animation: none; }
 .lite .kz-card { box-shadow: -3px 2px 0 0 var(--copper), 0 0 0 1px rgba(255, 140, 70, .28), 0 30px 50px -24px rgba(0,0,0,.85); }
-.lite .card-fallback .fb-card { animation: none; }
-.lite .fb-spark { display: none; }
 /* modo leve: gradientes que dependem do ângulo repintam a cada quadro na CPU; ficam estáticos */
-.lite .fb-gloss { display: none; }
 .lite .fb-back {
   background: linear-gradient(150deg, #4a4b50, #38393e 50%, #2b2c30);
 }
@@ -1559,7 +1554,6 @@ html.lite body::after { display: none; }
   85%, 100% { transform: translateX(260%) skewX(-12deg); }
 }
 .kz-shiny .fb-spark { transform: none; z-index: 1; }
-.lite .kz-shine { display: none; }
 
 /* =========================================================
    Papel de parede do celular (demonstração): tema KZORA
@@ -1617,7 +1611,6 @@ html.lite body::after { display: none; }
 }
 @keyframes wallSpin { to { rotate: 360deg; } }
 @keyframes wallPulse { 0%, 100% { opacity: .75; scale: .95; } 50% { opacity: 1; scale: 1.05; } }
-.lite .wall-orbit, .lite .wall-glow { animation: none; }
 @media (max-width: 600px) {
   .wall-mark { width: 88px; }
   .wall-orbit { width: 112px; }
@@ -1677,3 +1670,25 @@ html.lite body::after { display: none; }
 .legal-page .fill { background: rgba(255, 102, 0, .15); border: 1px dashed rgba(255, 138, 61, .6); border-radius: 6px; padding: 0 6px; color: var(--amber); }
 .legal-header { position: sticky; top: 0; z-index: 50; background: rgba(8, 8, 10, .92); border-bottom: 1px solid var(--line); }
 .legal-header .header-inner { height: 64px; }
+
+/* =========================================================
+   Celular: etiquetas da abertura compactas (2 de cada lado do cartão)
+   ========================================================= */
+.hero.callouts-compact .callout {
+  padding: 5px 9px 5px 5px; gap: 6px; border-radius: 10px;
+  max-width: 116px; white-space: normal;
+}
+.hero.callouts-compact .callout-icon { width: 22px; height: 22px; border-radius: 7px; }
+.hero.callouts-compact .callout-icon svg { width: 13px; height: 13px; }
+.hero.callouts-compact .callout-text b,
+.hero.callouts-compact .callout-text small { display: none; }
+.hero.callouts-compact .callout-text strong { font-size: .58rem; letter-spacing: .05em; line-height: 1.15; }
+/* abertura grande: o cartão CSS fica por cima do texto (ainda oculto) enquanto está no centro */
+.hero.intro-on .hero-visual { position: relative; z-index: 3; }
+
+/* celular: etiquetas estreitas (só o nome, em até 2 linhas) para caber 2 de cada lado do cartão */
+@media (max-width: 600px) {
+  .hero.callouts-compact .callout { padding: 6px 8px; max-width: 84px; gap: 0; }
+  .hero.callouts-compact .callout-icon { display: none; }
+  .hero.callouts-compact .callout-text strong { font-size: .55rem; letter-spacing: .04em; }
+}
